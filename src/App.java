@@ -1,6 +1,6 @@
 import processing.core.*;
 
-public class App extends PApplet {
+public class App extends PApplet { // A complete list of all my variables.
     float ball;
     float ballX;
     float ballY;
@@ -27,7 +27,7 @@ public class App extends PApplet {
     int elapsedTime;
     boolean leftpressed = false;
     boolean rightpressed = false;
-    double speed = -1;
+    double speed;
     double speedUp1 = -2;
     double speedUp2 = -3;
     double speedUp3 = -4;
@@ -45,32 +45,30 @@ public class App extends PApplet {
 
     }
 
+    // This is the main collesion code. I had to adjust the variable to 26 so the
+    // ball floated on the line and not in the line.
     public boolean isBallTouchingLine(float lineY, float lineX) {
         if (ballY >= lineY - 26 && ballY <= lineY + 6 && ballX >= lineX && ballX <= lineX + lineWidth) {
-            System.out.println("Ball touching line");
             return true;
-
         } else {
             return false;
         }
     }
 
+    // This is the main setup.
     public void setup() {
         background(255);
+        speed = -1;
         ball = 45;
         ballX = width / 2;
         ballY = height / 2;
-        startTime = millis(); 
-        line1Y = random(lineWidth);
-        line2Y = random(lineWidth);
-        line3Y = random(lineWidth);
-        line4Y = random(lineWidth);
-        line5Y = random(lineWidth);
-        line6Y = random(lineWidth);
-
+        startTime = millis();
+        lineWidth = random(400) + 200;
     }
 
     public void draw() {
+        // This is the main function that makes the game work. In it's own boolean to
+        // restart than game once you lose.
         if (running) {
             line1Y += speed;
             line2Y += speed;
@@ -79,9 +77,61 @@ public class App extends PApplet {
             line5Y += speed;
             line6Y += speed;
             elapsedTime = (millis() - startTime) / 1000;
-            speedUp1();  
-            speedUp2();  
-            speedUp3();  
+            speedUp();
+
+            if (isBallTouchingLine(line7Y, line7X)) {
+                System.out.println("touching top");
+                ballTouchingLine = true;
+                running = false;
+                startTime = 0;
+            }
+            if (ballTouchingLine) {
+                ballY += speed;
+            } else {
+                ballY -= gravity;
+            }
+            // This section is how I got the ball to move with the line. If the ball is
+            // touching the
+            // line than it moves at the same speed as the line. If the ball is not than it
+            // falls at a different
+            // speed to simulate gravity.
+            if (isBallTouchingLine(line1Y, line1X) || isBallTouchingLine(line2Y, line2X) ||
+                    isBallTouchingLine(line3Y, line3X) || isBallTouchingLine(line4Y, line4X)
+                    || isBallTouchingLine(line5Y, line5X) || isBallTouchingLine(line6Y, line6X)) {
+                ballTouchingLine = true;
+            } else {
+                ballTouchingLine = false;
+
+                if (ballTouchingLine) {
+
+                } else {
+                    ballY -= gravity;
+                }
+
+            }
+            if (line1Y <= 0) {
+                line1Y = height;
+            }
+            if (line2Y <= 0) {
+                line2Y = height;
+            }
+            if (line3Y <= 0) {
+                line3Y = height;
+            }
+            if (line4Y <= 0) {
+                line4Y = height;
+            }
+            if (line5Y <= 0) {
+                line5Y = height;
+            }
+            if (line6Y <= 0) {
+                line6Y = height;
+            }
+            moveBall();
+        } else { // This is my gameover function.
+            System.out.println("game over");
+            youLost();
+
         }
 
         background(255);
@@ -93,78 +143,32 @@ public class App extends PApplet {
         drawLine5();
         drawLine6();
         drawEndLine();
-        drawWinLine();
 
-         if (isBallTouchingLine(line7X, line7Y)) {
-            ballTouchingLine = true;
-            youLost();
+        // This is my time function to make the time count and displayed in the top left
+        // corner.
+        if (running) {
+            elapsedTime = (millis() - startTime) / 1000;
+            textSize(16);
+            textAlign(LEFT, TOP);
+            fill(0);
+            text("Elapsed Time: " + elapsedTime + " seconds", 10, 10);
         }
-
-        // if (isBallTouchingLine(line8X, line8Y)) {
-        //     ballTouchingLine = true;
-        //     youWin();
-        // }
-
-        if (ballTouchingLine) {
-            // Do not update the ball's position if it's touching the line
-            ballY += speed;
-        } else {
-            // Fall due to gravity
-            ballY -= gravity;
-        }
-        if (isBallTouchingLine(line1Y, line1X) || isBallTouchingLine(line2Y, line2X) ||
-                isBallTouchingLine(line3Y, line3X) || isBallTouchingLine(line4Y, line4X)
-                || isBallTouchingLine(line5Y, line5X) || isBallTouchingLine(line6Y, line6X)) {
-            ballTouchingLine = true;
-        } else {
-            ballTouchingLine = false;
-
-            if (ballTouchingLine) {
-
-            } else {
-                ballY -= gravity;
-            }
-
-        }
-        if (line1Y <= 0) {
-            line1Y = height;
-        }
-        if (line2Y <= 0) {
-            line2Y = height;
-        }
-        if (line3Y <= 0) {
-            line3Y = height;
-        }
-        if (line4Y <= 0) {
-            line4Y = height;
-        }
-        if (line5Y <= 0) {
-            line5Y = height;
-        }
-        if (line6Y <= 0) {
-            line6Y = height;
-        }
-        if (running) {elapsedTime = (millis() - startTime) / 1000;
-
-        // Display elapsed time
-        textSize(16);
-        textAlign(LEFT, TOP);
-        fill(0);
-        text("Elapsed Time: " + elapsedTime + " seconds", 10, 10);
-        }
-
-    
     }
 
-    public void drawBall() {
+    public void moveBall() {
         if (leftpressed == true) {
             ballX += ballSpeed;
         }
         if (rightpressed == true) {
             ballX -= ballSpeed;
         }
-        ellipse(ballX, ballY, ball, ball);
+    }
+
+    // Below are my eight main components being drawn. I call these methods in the
+    // draw method.
+    public void drawBall() {
         fill(0, 0, 255);
+        ellipse(ballX, ballY, ball, ball);
     }
 
     public void drawLine1() {
@@ -209,29 +213,19 @@ public class App extends PApplet {
         color(255, 128, 0);
     }
 
-    public void drawWinLine() {
-        line(line8X, line8Y, line8X + lineWidth8, line8Y);
-        strokeWeight(6);
-        color(255, 128, 0);
-    }
-
     public void keyPressed() {
         if (keyCode == LEFT) {
             leftpressed = true;
         }
         if (keyCode == RIGHT) {
             rightpressed = true;
-            // } else if (keyCode == UP) {
-            // ballY -= 10;
-            // } else if (keyCode == DOWN) {
-            // ballY += 10;
         }
-        if (key == 'r') {
+        if (key == 'r') { // This is where the game restarts if I press "r"
             restartGame();
-
         }
     }
 
+    // And this is where the restartGame method is programmed.
     public void restartGame() {
         ballX = width / 2;
         ballY = height / 2;
@@ -244,7 +238,7 @@ public class App extends PApplet {
         running = true;
         startTime = millis();
         setup();
-        }
+    }
 
     public void keyReleased() {
         if (keyCode == LEFT) {
@@ -255,27 +249,22 @@ public class App extends PApplet {
         }
     }
 
-    public void youLost() {
-        running = false;
-        startTime = 0;
-        fill(0); // Set the fill color to black
-        textSize(80); // Set the text size to 32 pixels
+    public void youLost() { // youLost screen that no longer gets displayed.
+
+        background(255);
+        fill(0);
+        textSize(80);
         text("You Lost!", 240, 150);
         text("Hit 'R' to Restart!", 170, 300);
-        text("Time: " + elapsedTime, 270,400);
+        text("Time: " + elapsedTime, 270, 400);
     }
 
-    public void speedUp1(){
+    public void speedUp() {
         if (elapsedTime >= 10)
             speed = speedUp1;
-    }
-    public void speedUp2(){
         if (elapsedTime >= 20)
             speed = speedUp2;
-    }
-    public void speedUp3(){
         if (elapsedTime >= 30)
             speed = speedUp3;
     }
-
 }
